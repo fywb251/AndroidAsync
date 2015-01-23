@@ -14,6 +14,9 @@ import java.nio.charset.Charset;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 @TargetApi(Build.VERSION_CODES.GINGERBREAD)
 public class ByteBufferList {
     ArrayDeque<ByteBuffer> mBuffers = new ArrayDeque<ByteBuffer>();
@@ -362,11 +365,26 @@ public class ByteBufferList {
         return peekString(null);
     }
 
+    public byte[] byteSplit(byte[] origin,int offset,int length){
+    	if(origin.length<=offset || origin.length<length || offset+length>origin.length){
+    		return null;
+    	}
+    	byte[] newByte = new byte[length];
+    	for(int i= 0; i<length;i++){
+    		newByte[i] = origin[offset+i];
+    	}
+    	return newByte;
+    	
+    }
+    
+    
+    
     // not doing toString as this is really nasty in the debugger...
     public String peekString(Charset charset) {
         if (charset == null)
-            charset = Charsets.US_ASCII;
+            charset = Charsets.UTF_8;
         StringBuilder builder = new StringBuilder();
+        JSONObject json = null;
         for (ByteBuffer bb: mBuffers) {
             byte[] bytes;
             int offset;
@@ -382,9 +400,39 @@ public class ByteBufferList {
                 offset = bb.arrayOffset() + bb.position();
                 length = bb.remaining();
             }
-            builder.append(new String(bytes, offset, length, charset));
+            byte[] bs = byteSplit(bytes,offset,length);
+            StringBuffer buff = new StringBuffer();
+            int index = 0;
+            for (int i = 0; i < bs.length; i++) {
+				if(Integer.toHexString(bs[i]&0xff).equals("ff")){
+					index = i;
+					byte[] sub = byteSplit(bs, 0, i);
+					if(Integer.toHexString(sub[0]&0xff).equals("0")){
+						byte[] sub2 = byteSplit(sub, 1, i-1);
+						for (byte b : sub2) {
+							buff.append(Integer.toHexString(b&0xff));
+						}
+					}
+					break;
+				}
+//            	buff.append(Integer.toHexString(bs[i]&0xff));
+			}
+           int type = Integer.parseInt(Integer.toHexString(bs[index+1] & 0xff));
+           int contentLength = Integer.parseInt(buff.toString());
+           byte[] contentByte = byteSplit(bs, index+2, length-index-2);
+           String content = new String(contentByte,charset);
+           try {
+			json = new JSONObject(content);
+			json.put("length", contentLength);
+			json.put("type",type);
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+           
+//            builder.append(new String(bs,charset));
         }
-        return builder.toString();
+        return json.toString();
     }
 
     public String readString() {

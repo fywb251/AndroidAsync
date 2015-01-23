@@ -1,5 +1,15 @@
 package com.koushikdutta.async.sample;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.message.BasicNameValuePair;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Bitmap;
@@ -22,13 +32,12 @@ import com.koushikdutta.async.http.AsyncHttpPost;
 import com.koushikdutta.async.http.AsyncHttpResponse;
 import com.koushikdutta.async.http.body.UrlEncodedFormBody;
 import com.koushikdutta.async.http.cache.ResponseCacheMiddleware;
-
-import org.apache.http.NameValuePair;
-import org.apache.http.message.BasicNameValuePair;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
+import com.koushikdutta.async.http.socketio.Acknowledge;
+import com.koushikdutta.async.http.socketio.ConnectCallback;
+import com.koushikdutta.async.http.socketio.EventCallback;
+import com.koushikdutta.async.http.socketio.JSONCallback;
+import com.koushikdutta.async.http.socketio.SocketIOClient;
+import com.koushikdutta.async.http.socketio.StringCallback;
 
 public class MainActivity extends Activity {
     static ResponseCacheMiddleware cacher;
@@ -59,6 +68,15 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 refresh();
+                
+                runOnUiThread(new Runnable() {
+					
+					@Override
+					public void run() {
+						chat();
+					}
+				});
+                
             }
         });
         
@@ -148,6 +166,90 @@ public class MainActivity extends Activity {
             ex.printStackTrace();
         }
     }
+    
+    @SuppressWarnings("deprecation")
+	private void chat(){
+    	
+    	SocketIOClient.connect(AsyncHttpClient.getDefaultInstance(), "http://192.168.1.205:9093", new ConnectCallback() {
+    	    @Override
+    	    public void onConnectCompleted(Exception ex, SocketIOClient client) {
+    	        if (ex != null) {
+    	            ex.printStackTrace();
+    	            return;
+    	        }
+    	        client.setStringCallback(new StringCallback() {
+
+					@Override
+					public void onString(String string, Acknowledge acknowledge) {
+						System.out.println(string);
+						
+					}
+    	        });
+    	        client.on("message", new EventCallback() {
+					@Override
+					public void onEvent(JSONArray argument,
+							Acknowledge acknowledge) {
+						System.out.println("args: " + argument.toString());
+						
+					}
+    	        });
+    	        client.setJSONCallback(new JSONCallback() {
+    	           
+					@Override
+					public void onJSON(JSONObject json, Acknowledge acknowledge) {
+						System.out.println("json: " + json.toString());
+						
+					}
+    	        });
+    	        client.on("connect", new EventCallback() {
+					
+					@Override
+					public void onEvent(JSONArray argument, Acknowledge acknowledge) {
+						System.out.println("args: " + argument.toString());
+					}
+				});
+    	        client.on("disconnect", new EventCallback(){
+
+					@Override
+					public void onEvent(JSONArray argument,
+							Acknowledge acknowledge) {
+						System.out.println("args: " + argument.toString());
+						
+					}});
+    	        client.on("ackevent2", new EventCallback(){
+
+					@Override
+					public void onEvent(JSONArray argument,
+							Acknowledge acknowledge) {
+						System.out.println("args: " + argument.toString());
+						
+					}});
+    	        client.on("ackevent3", new EventCallback(){
+
+					@Override
+					public void onEvent(JSONArray argument,
+							Acknowledge acknowledge) {
+						System.out.println("args: " + argument.toString());
+						
+					}});
+    	        JSONArray args = new JSONArray();
+    	        JSONObject json = new JSONObject();
+    	        try {
+    	        	json.put("username", "201");
+					json.put("message","ddddddd");
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+    	        args.put(json);
+    	        client.emit("ackevent1", args);
+    	        
+    	        
+    	    }
+    	});
+    	
+    }
+    
     
     private String randomFile() {
         return ((Long)Math.round(Math.random() * 1000)).toString() + ".png";

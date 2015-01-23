@@ -2,9 +2,10 @@ package com.koushikdutta.async.http.socketio;
 
 import android.net.Uri;
 
+import com.koushikdutta.async.http.AsyncHttpGet;
 import com.koushikdutta.async.http.AsyncHttpPost;
 
-public class SocketIORequest extends AsyncHttpPost {
+public class SocketIORequest extends AsyncHttpGet {
     public SocketIORequest(String uri) {
         this(uri, "");
     }
@@ -33,7 +34,7 @@ public class SocketIORequest extends AsyncHttpPost {
     }
 
     public SocketIORequest(String uri, String endpoint, String query, Config config) {
-        super(Uri.parse(uri + (query == null ? "" : "?" + query)).buildUpon().encodedPath("/socket.io/1/").build().toString());
+        super(Uri.parse(uri + (query == null ? "" : "?" + query)).buildUpon().encodedPath("/socket.io/?EIO=3&transport=polling").build().toString());
         this.config = (config != null) ? config : new Config();
         this.endpoint = endpoint;
         this.query = query;

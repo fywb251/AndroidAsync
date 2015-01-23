@@ -17,6 +17,7 @@ import com.koushikdutta.async.http.socketio.transport.WebSocketTransport;
 import com.koushikdutta.async.http.socketio.transport.XHRPollingTransport;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -90,6 +91,65 @@ class SocketIOConnection {
         transport.disconnect();
         transport = null;
     }
+    
+    public String toHexString1(byte b){
+        String s = Integer.toHexString(b & 0xFF);
+        if (s.length() == 1){
+            return "0" + s;
+        }else{
+            return s;
+        }
+    }
+    public String toHexString1(byte[] b){
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < b.length; ++i){
+            buffer.append(toHexString1(b[i]));
+        }
+        return buffer.toString();
+    }
+    
+    public String resultParse(String result){
+    	JSONObject json=null;
+    	if(result.length()>0){
+    		int index = 0;
+    		byte[] bts = result.getBytes();
+        	for (int i = 0; i < bts.length; i++) {
+				if(toHexString1(bts[0]).equals("00")&&toHexString1(bts[i]).equals("7b")){
+					index = i;
+					break;
+				}
+			}
+        	StringBuffer sb1 = new StringBuffer();
+        	for (int i = 1; i < index; i++) {
+        		String bs = toHexString1(bts[i]);
+        		if(bs.length() ==2){
+        			sb1.append(Integer.parseInt(bs));
+        		}
+			}
+        	int contentLength = Integer.parseInt(sb1.toString());
+        	int type = Integer.parseInt(toHexString1(bts[index+1]));
+        	byte[] cts = new byte[(bts.length -index-2)];
+        	int j = 0;
+        	for (int i = index+2; i < bts.length; i++) {
+        		cts[j] = bts[i];
+        		j++;
+			}
+        	String content = toHexString1(cts);
+        	try {
+				json = new JSONObject(content);
+				json.put("type", type);
+				json.put("size", contentLength);
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+    	}else{
+    		json = new JSONObject();
+    	}
+    	return String.valueOf(json);
+    	
+    }
+    
+    
 
     Cancellable connecting;
     void reconnect(final DependentCancellable child) {
@@ -110,6 +170,7 @@ class SocketIOConnection {
         .then(new TransformFuture<SocketIOTransport, String>() {
             @Override
             protected void transform(String result) throws Exception {
+            	result = resultParse(result);
                 String[] parts = result.split(":");
                 final String sessionId = parts[0];
                 if (!"".equals(parts[1]))
