@@ -170,7 +170,7 @@ public class MainActivity extends Activity {
     @SuppressWarnings("deprecation")
 	private void chat(){
     	
-    	SocketIOClient.connect(AsyncHttpClient.getDefaultInstance(), "http://192.168.1.205:9093", new ConnectCallback() {
+    	SocketIOClient.connect(AsyncHttpClient.getDefaultInstance(), "http://192.168.1.189:9093", new ConnectCallback() {
     	    @Override
     	    public void onConnectCompleted(Exception ex, SocketIOClient client) {
     	        if (ex != null) {
