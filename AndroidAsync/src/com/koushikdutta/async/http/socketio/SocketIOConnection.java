@@ -122,9 +122,10 @@ class SocketIOConnection {
                 final SimpleFuture<SocketIOTransport> transport = new SimpleFuture<SocketIOTransport>();
 
                 if (set.contains("websocket")) {
-                    final String sessionUrl = Uri.parse(request.getUri().toString()).buildUpon()
-                            .appendPath("websocket").appendPath(sessionId)
-                            .build().toString();
+//                    final String sessionUrl = Uri.parse(request.getUri().toString()).buildUpon()
+//                            .appendPath("websocket").appendPath(sessionId)
+//                            .build().toString();
+                	final String  sessionUrl = Uri.parse(request.getUri().toString()).buildUpon().appendQueryParameter("sid", sessionId).build().toString().replace("polling", "websocket");
 
                     httpClient.websocket(sessionUrl, null, null)
                     .setCallback(new FutureCallback<WebSocket>() {

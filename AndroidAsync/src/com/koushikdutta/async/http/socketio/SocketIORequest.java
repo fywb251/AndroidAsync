@@ -34,7 +34,7 @@ public class SocketIORequest extends AsyncHttpGet {
     }
 
     public SocketIORequest(String uri, String endpoint, String query, Config config) {
-        super(Uri.parse(uri + (query == null ? "" : "?" + query)).buildUpon().encodedPath("/socket.io/?EIO=3&transport=polling").build().toString());
+        super(Uri.parse(uri + (query == null ? "" : "?" + query)).buildUpon().encodedPath("/socket.io/1/").build().toString());
         this.config = (config != null) ? config : new Config();
         this.endpoint = endpoint;
         this.query = query;

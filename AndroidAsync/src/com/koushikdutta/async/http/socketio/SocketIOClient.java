@@ -65,7 +65,7 @@ public class SocketIOClient extends EventEmitter {
     }
 
     public static Future<SocketIOClient> connect(final AsyncHttpClient client, String uri, final ConnectCallback callback) {
-        return connect(client, new SocketIORequest(uri), callback);
+        return connect(client, new SocketIORequest(uri,"","EIO=2&transport=polling",null), callback);
     }
 
     ConnectCallback connectCallback;
